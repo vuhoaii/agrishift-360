@@ -1,0 +1,31 @@
+<header class="page-head">
+  <div class="page-head-copy"><h1>{{ t('insights_title') }}</h1><div class="title-accent" aria-hidden="true"></div><p>{{ t('insights_intro') }}</p></div>
+  {{ illustration('field-notebook','head-art',false) }}
+</header>
+{% if result %}
+<div class="accordion-list">
+  <details class="guide" open>
+    <summary>{{ icon('cloud') }}{{ t('guide_climate') }}</summary>
+    <div class="guide-content guide-illustrated">
+      {{ illustration('satellite') }}
+      <div><p>{{ t('guide_climate_body') }}</p><p>{{ t('guide_climate_used') }}</p><p>{{ t('climate_disclaimer') }}</p><a class="text-link" href="{{ url_for('home', view='climate', **qs) }}">{{ t('nav_climate') }}{{ icon('arrow') }}</a></div>
+    </div>
+  </details>
+  <details class="guide">
+    <summary>{{ icon('scale') }}{{ t('guide_comparison') }}</summary>
+    <div class="guide-content"><p>{{ t('guide_comparison_body') }}</p><p>{{ msg(result.method) }}</p><div class="summary-note section"><div><h2>{{ t('summary_title') }}</h2><p>{{ msg(result.summary) }}</p></div></div><a class="text-link" href="{{ url_for('home', view='method', **qs) }}">{{ t('nav_method') }}{{ icon('arrow') }}</a></div>
+  </details>
+  <details class="guide">
+    <summary>{{ icon('method') }}{{ t('guide_missing') }}{% if result.missing_info %} ({{ result.missing_info|length }}){% endif %}</summary>
+    <div class="guide-content"><p>{{ t('guide_missing_body') }}</p>
+      {% if result.missing_info %}<ul>{% for item in result.missing_info %}<li>{{ msg(item) }}</li>{% endfor %}</ul>{% else %}<p>{{ t('missing_none') }}</p>{% endif %}
+      <a class="text-link" href="{{ url_for('home', view='farm', **qs) }}">{{ t('edit_conditions') }}{{ icon('arrow') }}</a>
+    </div>
+  </details>
+  <details class="guide">
+    <summary>{{ icon('info') }}{{ t('guide_limits') }}</summary>
+    <div class="guide-content"><ul>{% for number in range(1,6) %}<li>{{ t('limit_' ~ number) }}</li>{% endfor %}</ul><ul>{% for note in result.notes %}<li>{{ msg(note) }}</li>{% endfor %}</ul></div>
+  </details>
+</div>
+{{ illustration('field-landscape','page-landscape') }}
+{% endif %}

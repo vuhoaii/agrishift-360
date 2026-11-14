@@ -1,0 +1,11 @@
+# Commands run from the repository root; do not set rootDir to RiceShift.
+services:
+  - type: web
+    name: riceshift
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install -r RiceShift/requirements-web.txt
+    startCommand: gunicorn --chdir RiceShift web:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 60 --access-logfile - --error-logfile -
+    healthCheckPath: /health
+    autoDeployTrigger: "off"

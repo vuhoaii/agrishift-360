@@ -1,0 +1,38 @@
+<header class="page-head">
+  <div class="page-head-copy"><h1>{{ t('method_title') }}</h1><div class="title-accent" aria-hidden="true"></div><p>{{ t('method_intro') }}</p></div>
+  {{ illustration('rice-stalk','head-art rice',false) }}
+</header>
+{% if result %}
+<section aria-labelledby="process-heading">
+  <h2 id="process-heading">{{ t('process_title') }}</h2>
+  <ol class="process">
+    {% for glyph in ['cloud','land','warning','scale','sprout','book'] %}
+    <li>{{ icon(glyph) }}<h3>{{ loop.index }}. {{ t('process_' ~ loop.index ~ '_title') }}</h3><p>{{ t('process_' ~ loop.index ~ '_body') }}</p></li>
+    {% endfor %}
+  </ol>
+</section>
+<div class="method-grid">
+  <section aria-labelledby="weights-heading">
+    <h2 id="weights-heading">{{ t('weights_title') }}</h2>
+    <p class="help">{{ t('weights_intro') }} {{ t('goal_' ~ selected.goal) }}.</p>
+    <div class="weights">
+      {% for key in ['water','diversity','continuity'] %}
+      <div class="weight">
+        <div class="weight-label"><span>{{ t(key) }}</span><strong>{{ (result.weights[key] * 100)|round|int }}%</strong></div>
+        <div class="meter" aria-hidden="true"><svg viewBox="0 0 100 7" preserveAspectRatio="none"><rect width="{{ result.weights[key] * 100 }}" height="7" rx=".5"></rect></svg></div>
+        <p class="help">{{ t(key ~ '_help') }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    <details class="optional-details"><summary>{{ icon('scale') }}{{ t('method_details') }}</summary><div class="details-content method-formula"><strong>{{ t('formula') }}</strong><p>{{ msg(result.method) }}</p></div></details>
+  </section>
+  <section aria-labelledby="references-heading">
+    <h2 id="references-heading">{{ t('references_title') }}</h2>
+    {{ sources(result.options|map(attribute='sources')|sum(start=[])) }}
+    <details class="optional-details"><summary>{{ icon('info') }}{{ t('guide_limits') }}</summary><div class="details-content"><ul>{% for note in result.notes %}<li>{{ msg(note) }}</li>{% endfor %}</ul></div></details>
+    {{ missing(result.missing_info) }}
+  </section>
+</div>
+<aside class="limits-panel section"><h2>{{ icon('warning') }}{{ t('limits_title') }}</h2><ul>{% for number in range(1,6) %}<li>{{ t('limit_' ~ number) }}</li>{% endfor %}</ul></aside>
+{{ illustration('field-landscape','page-landscape') }}
+{% endif %}

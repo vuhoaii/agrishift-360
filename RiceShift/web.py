@@ -3,6 +3,8 @@
 
 import json
 
+from frontend_i18n import frontend_context
+
 from flask import (
     Flask, Response, jsonify,
     render_template, request,
@@ -17,6 +19,7 @@ from services.scoring_engine import (
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 8 * 1024
+app.context_processor(frontend_context)
 
 
 SEASONS = {
