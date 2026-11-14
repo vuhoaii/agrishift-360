@@ -1,0 +1,138 @@
+# RiceShift — Hướng dẫn triển khai cho Người 2 (Decision Engine)
+
+> **Mục tiêu:** Nhận dữ liệu khí hậu do Người 1 tạo ra, kết hợp dữ liệu cây trồng/đất/tưới và lựa chọn ưu tiên của người dùng để **đánh giá, so sánh, xếp hạng có giải thích** các phương án luân canh. Người 2 **không cần viết lại phần lấy hoặc xử lý dữ liệu NASA**.
+
+## 1. Đã có sẵn từ Người 1
+
+- Module: `services/climate_pipeline.py`.
+- Hàm dùng chung: `get_climate_payload_for_ui()`.
+- Dữ liệu NASA POWER hằng ngày, giai đoạn **2014–2025**, tọa độ thử nghiệm **(10.35, 105.28)**.
+- Hai kịch bản: `normal` (chọn mùa lịch sử gần P50 lượng mưa) và `low_rainfall` (chọn mùa lịch sử gần P25).
+- Mùa vụ: `Dong_Xuan` (tháng 11–3), `He_Thu` (4–7), `Thu_Dong` (8–10). Đây là **lịch thí điểm**, cần xác nhận với nhóm/địa phương.
+- Các file kết quả nằm trong `data/processed/`: `daily_clean_*.csv`, `seasonal_stats_*.csv`, `climate_payload_*.json`.
+
+**Cách chạy, từ thư mục `RiceShift/`:**
+
+```powershell
+pip install -r requirements.txt
+python -m services.climate_pipeline
+```
+
+**Cách lấy dữ liệu trong code:**
+
+```python
+from services.climate_pipeline import get_climate_payload_for_ui
+
+payload = get_climate_payload_for_ui(use_cached_csv=True, save_processed=False)
+climate = payload["scenarios"]["low_rainfall"]["He_Thu"]
+print(climate["total_rain_mm"], climate["avg_temp_C"])
+```
+
+> Hàm trên có thể gọi API NASA nếu không có cache. Khi phát triển/chạy test thường xuyên, nên nạp trực tiếp `data/processed/climate_payload_*.json` đã xuất để không phụ thuộc mạng. Không hard-code các con số mẫu trong scoring.
+
+## 2. Data Contract — đầu vào của Decision Engine
+
+Đường dẫn: `payload["scenarios"][scenario_name][season_name]`.
+
+| Trường | Kiểu | Ý nghĩa |
+|---|---|---|
+| `total_rain_mm` | `float` | Tổng mưa trong mùa vụ, **mm/vụ** |
+| `avg_temp_C` | `float` | Nhiệt độ trung bình, **°C** |
+| `max_temp_C` | `float` | Nhiệt độ tối đa trong vụ, **°C** |
+| `hot_days_over_35C` | `int` | Số ngày có nhiệt độ cực đại trên 35°C |
+| `dry_days` | `int` | Số ngày mưa dưới 1 mm |
+| `analog_year` | `int` | Năm mùa vụ lịch sử được chọn |
+| `target_rain_percentile` | `int` | 50 (`normal`) hoặc 25 (`low_rainfall`) |
+| `method` | `str` | `single_historical_analog_nearest_rain_percentile` |
+
+- `scenario_name`: `normal`, `low_rainfall`.
+- `season_name`: `Dong_Xuan`, `He_Thu`, `Thu_Dong`.
+- Kiểm tra khóa tồn tại; nếu thiếu dữ liệu mùa vụ, **báo không đủ dữ liệu**, không tự cho điểm 0 hoặc tự bịa giá trị.
+- `low_rainfall` nghĩa là **ít mưa hơn theo tổng mưa lịch sử**, **không** tương đương một dự báo hạn hán, thiếu nước tưới hay giảm năng suất.
+
+**Ví dụ đầu vào có thật từ kết quả thử nghiệm (Hè Thu, ít mưa):**
+
+```json
+{
+  "total_rain_mm": 597.12,
+  "avg_temp_C": 28.47,
+  "max_temp_C": 38.98,
+  "hot_days_over_35C": 21,
+  "dry_days": 44,
+  "analog_year": 2017,
+  "target_rain_percentile": 25,
+  "method": "single_historical_analog_nearest_rain_percentile"
+}
+```
+
+## 3. Việc Người 2 phải làm
+
+1. **Định nghĩa các phương án luân canh cần so sánh:** ví dụ một phương án tiếp tục trồng lúa và 1–2 phương án lúa–màu. Chốt lịch cây trồng tương ứng với từng mùa vụ; không áp dụng cùng một cây cho tất cả vụ nếu không hợp lý.
+2. **Chuẩn bị bảng yêu cầu cây trồng và dữ liệu ngoài khí hậu:** khoảng nhiệt độ/nhu cầu mưa tham khảo, độ thoát nước của đất, khả năng tưới, hạn chế trong luân canh, ưu tiên của người dùng. Mỗi giá trị/ngưỡng phải có nguồn hoặc ghi rõ là giả định demo. **NASA không cung cấp trực tiếp năng suất, mức nước tưới hay hiệu quả kinh tế** trong payload này.
+3. **Xây dựng `services/scoring_engine.py`:** nhận kịch bản (`normal` / `low_rainfall`), phương án, dữ liệu đất/tưới và trọng số ưu tiên; kiểm tra điều kiện bắt buộc trước, sau đó đánh giá các tiêu chí có dữ liệu.
+4. **Chuẩn hóa các tiêu chí về cùng thang (ví dụ 0–100):** phù hợp nhiệt độ, phù hợp lượng mưa, rủi ro thời tiết, tương thích đất, điều kiện tưới, luân canh. Chọn công thức đơn giản, minh bạch; tránh mặc định rằng chỉ số cao hơn/thấp hơn luôn tốt hơn mọi cây.
+5. **Xếp hạng và giải thích:** hiển thị điểm từng tiêu chí, tổng điểm, tiêu chí bị loại, lý do và cảnh báo thiếu thông tin. So sánh điểm của cùng một phương án dưới cả hai kịch bản.
+6. **Viết test:** đúng khóa/đơn vị, trọng số hợp lệ, xếp hạng ổn định, dữ liệu thiếu có cảnh báo, thay đổi trọng số ảnh hưởng kết quả theo thiết kế. Không khẳng định có “phương án tối ưu thực tế” khi còn thiếu thông tin.
+
+## 4. Gợi ý giao diện hàm cho Người 2 (CHƯA PHẢI API ĐÃ CÓ)
+
+```python
+# services/scoring_engine.py (đề xuất — Người 2 triển khai)
+
+def compare_rotations(
+    climate_payload: dict,
+    scenario_name: str,
+    rotation_options: list[dict],
+    farm_context: dict,
+    weights: dict,
+) -> dict:
+    """Trả về kết quả chấm điểm/xếp hạng và giải thích."""
+    ...
+```
+
+Đầu ra mong muốn (chỉ là **schema minh họa**, không phải điểm đã tính):
+
+```json
+{
+  "scenario": "low_rainfall",
+  "ranked_options": [
+    {
+      "option_id": "option_1",
+      "eligible": true,
+      "score_total": null,
+      "score_breakdown": {},
+      "reasons": [],
+      "warnings": []
+    }
+  ],
+  "missing_inputs": [],
+  "method_note": "Điểm số là đánh giá sàng lọc theo dữ liệu, quy tắc và trọng số đã khai báo."
+}
+```
+
+`score_total: null` ở ví dụ vì **chưa có bộ ngưỡng cây trồng/trọng số và chưa chạy thuật toán**. Khi triển khai thật, trường này cần là số nếu đủ thông tin để chấm, hoặc `null` kèm lý do nếu không đủ thông tin.
+
+## 5. Cần thống nhất với Người 1 và nhóm
+
+- [ ] Xác nhận địa điểm thí điểm (tên địa danh và tọa độ) và lịch mùa vụ áp dụng.
+- [ ] Chốt danh sách phương án lúa/lúa–màu, cây cụ thể, và yêu cầu từng cây có nguồn.
+- [ ] Chốt ngưỡng/tiêu chí chấm điểm, dữ liệu đất và điều kiện tưới cần bổ sung.
+- [ ] Chốt các trọng số do người dùng nhập và cách chuẩn hóa điểm.
+- [ ] Nếu cần đánh giá hạn theo **từng giai đoạn sinh trưởng**, báo lại Người 1 để bổ sung chuỗi dữ liệu ngày; dữ liệu thống kê tổng hợp theo vụ chưa đủ.
+
+## 6. Tiêu chí bàn giao của Người 2
+
+- Có `services/scoring_engine.py` chạy độc lập, nhận được `climate_payload` từ Người 1.
+- Có cấu hình/dữ liệu cho ít nhất các phương án luân canh demo đã thống nhất.
+- Trả về điểm thành phần, xếp hạng, lý do, cảnh báo và nguồn/giả định rõ ràng.
+- Chạy được **cả `normal` và `low_rainfall` cho 3 mùa vụ** khi có dữ liệu phù hợp.
+- Có test tối thiểu cho tính hợp lệ của dữ liệu, trọng số, ràng buộc và giải thích kết quả.
+- Cung cấp hàm đầu ra rõ ràng để `app.py` và giao diện gọi được.
+
+### Ranh giới trách nhiệm
+
+**Người 1:** NASA POWER → dữ liệu sạch → thống kê mùa vụ → kịch bản khí hậu → JSON/CSV.  
+**Người 2:** Dữ liệu khí hậu + dữ liệu cây/đất/tưới + ưu tiên → điểm đánh giá → xếp hạng và giải thích.  
+**Backend/UI:** Gọi hai module và hiển thị kết quả.
+
+> **Lưu ý khoa học:** Đây là công cụ sàng lọc/mô phỏng để hỗ trợ ra quyết định ban đầu, không phải mô hình dự báo năng suất hay khuyến nghị nông học cuối cùng.

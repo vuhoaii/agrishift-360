@@ -1,0 +1,102 @@
+{
+  "location": {
+    "name": "Khu vực thí điểm An Giang (cần xác nhận địa danh)",
+    "lat": 10.35,
+    "lon": 105.28,
+    "period": "2006-2026",
+    "observed_through": "2026-11-07",
+    "data_source": "NASA POWER Daily API (AG Community)",
+    "time_standard": "LST",
+    "spatial_note": "Dữ liệu dạng lưới, không phải phép đo tại thửa ruộng.",
+    "season_calendar_note": "Đông Xuân 11–03, Hè Thu 04–07, Thu Đông 08–10 là giả định thí điểm."
+  },
+  "data_quality": {
+    "total_days": 7616,
+    "missing_cells_before": 0,
+    "repaired_cells": 0,
+    "missing_cells_remaining": 0,
+    "missing_rain_days": 0,
+    "missing_original_temp_days": 0,
+    "max_consecutive_missing_temp_days": 0,
+    "date_range": "2006-01-01 đến 2026-11-07",
+    "valid_complete_seasons": 62,
+    "valid_seasons_by_type": {
+      "Dong_Xuan": 20,
+      "He_Thu": 21,
+      "Thu_Dong": 21
+    }
+  },
+  "scenarios": {
+    "normal": {
+      "Dong_Xuan": {
+        "total_rain_mm": 225.24,
+        "avg_temp_C": 27.29,
+        "max_temp_C": 40.07,
+        "hot_days_over_35C": 46,
+        "dry_days": 110,
+        "analog_year": 2026,
+        "target_rain_percentile": 50,
+        "method": "single_historical_analog_nearest_rain_percentile"
+      },
+      "He_Thu": {
+        "total_rain_mm": 585.96,
+        "avg_temp_C": 29.66,
+        "max_temp_C": 40.96,
+        "hot_days_over_35C": 46,
+        "dry_days": 58,
+        "analog_year": 2026,
+        "target_rain_percentile": 50,
+        "method": "single_historical_analog_nearest_rain_percentile"
+      },
+      "Thu_Dong": {
+        "total_rain_mm": 645.38,
+        "avg_temp_C": 27.07,
+        "max_temp_C": 32.88,
+        "hot_days_over_35C": 0,
+        "dry_days": 12,
+        "analog_year": 2016,
+        "target_rain_percentile": 50,
+        "method": "single_historical_analog_nearest_rain_percentile"
+      }
+    },
+    "low_rainfall": {
+      "Dong_Xuan": {
+        "total_rain_mm": 170.24,
+        "avg_temp_C": 28.05,
+        "max_temp_C": 39.39,
+        "hot_days_over_35C": 58,
+        "dry_days": 127,
+        "analog_year": 2015,
+        "target_rain_percentile": 25,
+        "method": "single_historical_analog_nearest_rain_percentile"
+      },
+      "He_Thu": {
+        "total_rain_mm": 487.83,
+        "avg_temp_C": 28.56,
+        "max_temp_C": 39.42,
+        "hot_days_over_35C": 21,
+        "dry_days": 52,
+        "analog_year": 2013,
+        "target_rain_percentile": 25,
+        "method": "single_historical_analog_nearest_rain_percentile"
+      },
+      "Thu_Dong": {
+        "total_rain_mm": 505.49,
+        "avg_temp_C": 26.99,
+        "max_temp_C": 32.53,
+        "hot_days_over_35C": 0,
+        "dry_days": 23,
+        "analog_year": 2010,
+        "target_rain_percentile": 25,
+        "method": "single_historical_analog_nearest_rain_percentile"
+      }
+    }
+  },
+  "scenario_note": "P50/P25 chọn mùa vụ lịch sử gần phân vị lượng mưa; không phải dự báo hay tính nhu cầu tưới.",
+  "analysis_window": {
+    "rolling_complete_years": 20,
+    "archive_start_year": 2006,
+    "analysis_start_year": 2006,
+    "observed_through": "2026-11-07"
+  }
+}
