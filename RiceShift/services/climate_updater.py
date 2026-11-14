@@ -1,4 +1,4 @@
-"""Incremental NASA POWER updates, no Airflow required."""
+"""Archive NASA POWER updates; publish the fixed 2006-2025 study period."""
 from __future__ import annotations
 
 import argparse
@@ -130,49 +130,76 @@ def update(offline=False, start_year=climate.START_YEAR, as_of=None):
         raise RuntimeError("NASA has no usable data before cutoff")
     cutoff = available.index.max()
     changed = not raw.equals(initial)
-    if not master.exists() or changed:
-        write_atomic(master, raw)
 
-    # Analyze the last 20 completed calendar years, plus current partial year.
-    last_full_year = cutoff.year if cutoff.strftime("%m-%d") == "12-31" else cutoff.year - 1
-    first_year = max(start_year, last_full_year - 19)
-    window = available.loc[available.index >= pd.Timestamp(f"{first_year}-01-01")]
+    # The acquisition archive may grow; the agreed historical study does not.
+    first_year, last_year = climate.START_YEAR, climate.END_YEAR
+    first_day = pd.Timestamp(f"{first_year}-01-01")
+    last_day = pd.Timestamp(f"{last_year}-12-31")
+    window = available.loc[(available.index >= first_day) & (available.index <= last_day)]
+    expected = pd.date_range(first_day, last_day, name="date")
+    if not window.index.equals(expected) or window[list(PARAMS)].isna().any().any():
+        raise RuntimeError(
+            f"Historical publication requires complete original daily observations "
+            f"from {first_day:%Y-%m-%d} through {last_day:%Y-%m-%d}"
+        )
+    clean, quality = climate.clean_climate_data(window, first_year, last_year)
+    if quality["missing_cells_before"]:
+        raise RuntimeError("Historical publication requires valid original observations; no repairs")
+    seasons = climate.aggregate_by_season(clean)
     payload = climate.get_climate_payload_for_ui(
-        start_year=first_year, end_year=cutoff.year,
-        raw_df=window, end_date=cutoff.strftime("%Y-%m-%d"), save_processed=False
+        start_year=first_year, end_year=last_year,
+        raw_df=window, save_processed=False,
     )
     if any(set(payload["scenarios"][k]) != set(climate.SEASONS) for k in payload["scenarios"]):
         raise RuntimeError("Insufficient complete seasons; existing published JSON retained")
     payload["analysis_window"] = {
-        "rolling_complete_years": 20,
-        "archive_start_year": start_year,
+        "mode": "fixed_historical_period",
+        "calendar_years": last_year - first_year + 1,
+        "archive_start_year": int(raw.index.min().year),
         "analysis_start_year": first_year,
-        "observed_through": cutoff.strftime("%Y-%m-%d"),
+        "analysis_end_year": last_year,
+        "analysis_start_date": first_day.strftime("%Y-%m-%d"),
+        "analysis_end_date": last_day.strftime("%Y-%m-%d"),
+        "observed_through": last_day.strftime("%Y-%m-%d"),
+        "season_year_convention": (
+            "Dong_Xuan is labeled by its ending year: November of the previous "
+            "year through March. He_Thu and Thu_Dong use the calendar year. "
+            "Only seasons fully contained in the study period are eligible."
+        ),
     }
     target_file = climate.PROCESSED_DIR / "climate_payload_latest.json"
-    # Avoid rewriting identical publication on an unchanged daily run.
-    if changed or not target_file.exists():
-        clean, _ = climate.clean_climate_data(window, first_year, cutoff.year,
-                                              cutoff.strftime("%Y-%m-%d"))
-        seasons = climate.aggregate_by_season(clean)
-        for filename, df, use_index in (
-            ("daily_clean_latest.csv", clean, True),
-            ("seasonal_stats_latest.csv", seasons, False),
-        ):
-            path = climate.PROCESSED_DIR / filename
-            path.parent.mkdir(parents=True, exist_ok=True)
-            tmp = path.with_name(path.name + ".tmp")
-            try:
-                df.to_csv(tmp, index=use_index, index_label="date" if use_index else None)
+    publications = {
+        climate.PROCESSED_DIR / "daily_clean_latest.csv": clean.to_csv(index_label="date", lineterminator="\n"),
+        climate.PROCESSED_DIR / "seasonal_stats_latest.csv": seasons.to_csv(index=False, lineterminator="\n"),
+        target_file: json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False),
+    }
+    # A stale publication must be repaired even when the source archive is unchanged.
+    publication_changed = any(
+        not path.exists() or path.read_text(encoding="utf-8") != content
+        for path, content in publications.items()
+    )
+    if not master.exists() or changed:
+        write_atomic(master, raw)
+    if publication_changed:
+        climate.PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+        staged = []
+        try:
+            # Stage every artifact before replacing CSVs, then publish JSON last.
+            for path, content in publications.items():
+                tmp = path.with_name(path.name + ".tmp")
+                staged.append((tmp, path))
+                tmp.write_text(content, encoding="utf-8")
+            for tmp, path in staged:
                 os.replace(tmp, path)
-            finally:
+        finally:
+            for tmp, _ in staged:
                 tmp.unlink(missing_ok=True)
-        write_atomic(target_file, payload, is_json=True)  # Publish JSON last.
     return {
-        "status": "updated" if changed else "unchanged",
+        "status": "updated" if changed or publication_changed else "unchanged",
         "archive_start_year": start_year,
         "stored_days": len(raw),
-        "observed_through": cutoff.strftime("%Y-%m-%d"),
+        "observed_through": last_day.strftime("%Y-%m-%d"),
+        "archive_observed_through": cutoff.strftime("%Y-%m-%d"),
         "valid_seasons": payload["data_quality"]["valid_complete_seasons"],
         "output": str(target_file),
         "queries": [[a.isoformat(), b.isoformat()] for a, b in windows],

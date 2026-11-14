@@ -28,7 +28,7 @@
     <details>
       <summary>{{ icon('scale') }}{{ t('score_details') }}</summary>
       <div class="details-content">
-        {% for key in ['water','diversity','continuity'] %}<div class="breakdown"><span>{{ t(key) }}</span><strong>{{ (option.components[key]|string ~ ' / 2') if option.components[key] is not none else t('unknown') }}</strong></div>{% endfor %}
+        {% for key in ['water','diversity','continuity'] %}<div class="breakdown"><span>{{ t(key) }}</span><strong>{{ ('%.3f'|format(option.components[key]) ~ ' / 2') if option.components[key] is not none else t('unknown') }}</strong></div>{% endfor %}
         <p class="help">{{ t('component_note') }}</p>
       </div>
     </details>

@@ -132,6 +132,61 @@ MESSAGES = {
     ]
 }
 
+MESSAGES.update({
+    'Historical climate payload is invalid.': (
+        'Tệp dữ liệu khí hậu lịch sử không hợp lệ.',
+        'Historical climate payload is invalid.',
+    ),
+    'The crop calendar confirmation must be true or false.': (
+        'Xác nhận lịch mùa vụ phải là giá trị đúng hoặc sai.',
+        'The crop calendar confirmation must be true or false.',
+    ),
+    'NASA POWER is gridded historical data, not a measurement from the field.': (
+        'NASA POWER là dữ liệu lịch sử dạng lưới, không phải số đo tại ruộng.',
+        'NASA POWER is gridded historical data, not a measurement from the field.',
+    ),
+    'Rainfall and dry-day frequency share a bounded experimental water component; they are not statistically independent.': (
+        'Lượng mưa và tần suất ngày khô cùng đóng góp vào tiêu chí nước thử nghiệm có giới hạn; hai chỉ báo không độc lập về thống kê.',
+        'Rainfall and dry-day frequency share a bounded experimental water component; they are not statistically independent.',
+    ),
+    'Temperature and hot days are assessed separately from rainfall. Seasonal summaries cannot establish exposure during flowering.': (
+        'Nhiệt độ và ngày nóng được xem xét riêng với lượng mưa. Tổng hợp theo vụ không xác định được mức phơi nhiễm lúc ra hoa.',
+        'Temperature and hot days are assessed separately from rainfall. Seasonal summaries cannot establish exposure during flowering.',
+    ),
+    'Categorical drainage and salinity inputs require local verification; they are not universal crop exclusion thresholds.': (
+        'Thông tin phân loại thoát nước và độ mặn cần được xác minh tại địa phương; đây không phải ngưỡng loại trừ cây trồng áp dụng chung.',
+        'Categorical drainage and salinity inputs require local verification; they are not universal crop exclusion thresholds.',
+    ),
+    'Reported salinity needs measured soil and water conductivity and local variety advice before ranking either option.': (
+        'Khi ghi nhận mặn, cần đo độ dẫn điện của đất và nước, đồng thời tư vấn về giống tại địa phương trước khi xếp hạng cả hai phương án.',
+        'Reported salinity needs measured soil and water conductivity and local variety advice before ranking either option.',
+    ),
+    'Poor drainage requires field verification or improvement before sesame can be ranked.': (
+        'Thoát nước kém cần được kiểm tra tại ruộng hoặc cải thiện trước khi xếp hạng phương án mè.',
+        'Poor drainage requires field verification or improvement before sesame can be ranked.',
+    ),
+    'Incomplete or invalid historical indicators prevent ranking; missing values are not assumed safe.': (
+        'Chỉ báo lịch sử thiếu hoặc không hợp lệ khiến hệ thống chưa thể xếp hạng; giá trị thiếu không được coi là an toàn.',
+        'Incomplete or invalid historical indicators prevent ranking; missing values are not assumed safe.',
+    ),
+    'Sesame tolerates drought relatively well but still needs moisture for germination and establishment.': (
+        'Mè tương đối chịu khô nhưng vẫn cần đủ ẩm để nảy mầm và hình thành cây con.',
+        'Sesame tolerates drought relatively well but still needs moisture for germination and establishment.',
+    ),
+    'Rice flowering is heat-sensitive. Check whether hot days overlapped flowering; this count does not establish sterility or yield loss.': (
+        'Lúa nhạy cảm với nóng khi ra hoa. Cần kiểm tra ngày nóng có trùng giai đoạn này không; số ngày nóng không chứng minh hiện tượng bất dục hoặc mất năng suất.',
+        'Rice flowering is heat-sensitive. Check whether hot days overlapped flowering; this count does not establish sterility or yield loss.',
+    ),
+    'The 35 C hot-day indicator is not a validated sesame injury threshold; no crop-specific heat penalty is assigned.': (
+        'Chỉ báo ngày nóng trên 35°C chưa phải ngưỡng gây hại đã kiểm chứng cho mè; không áp dụng điểm phạt nhiệt riêng cho cây này.',
+        'The 35 C hot-day indicator is not a validated sesame injury threshold; no crop-specific heat penalty is assigned.',
+    ),
+    'Decision Engine v2: score = 50 x sum(weight x component 0-2). Water = B - E x C x (0.5 x D + 0.5 x F), where D = max(0, 1 - rain/P50 analog rain), F = dry days/season days, B = 2 with available irrigation or 1 with limited irrigation, E = 0.25 or 1 respectively, and C = 1 for rice or 0.5 for sesame. All coefficients and weights are EXPERIMENTAL. Temperature and hot days inform separate verification warnings, without numerical penalties. This is not validated suitability, a yield forecast or a probability of success.': (
+        'Decision Engine v2: điểm = 50 × tổng (trọng số × thành phần 0–2). Nước = B − E × C × (0,5 × D + 0,5 × F), với D = max(0, 1 − mưa/mưa mùa tham chiếu P50), F = số ngày khô/số ngày trong vụ; B = 2 khi chủ động tưới hoặc 1 khi tưới hạn chế; E tương ứng = 0,25 hoặc 1; C = 1 cho lúa hoặc 0,5 cho mè. Tất cả hệ số và trọng số đều là giả định THỬ NGHIỆM. Nhiệt độ và ngày nóng được dùng để cảnh báo xác minh riêng, không trừ điểm. Đây không phải độ phù hợp đã kiểm chứng, dự báo năng suất hoặc xác suất thành công.',
+        'Decision Engine v2: score = 50 x sum(weight x component 0-2). Water = B - E x C x (0.5 x D + 0.5 x F), where D = max(0, 1 - rain/P50 analog rain), F = dry days/season days, B = 2 with available irrigation or 1 with limited irrigation, E = 0.25 or 1 respectively, and C = 1 for rice or 0.5 for sesame. All coefficients and weights are EXPERIMENTAL. Temperature and hot days inform separate verification warnings, without numerical penalties. This is not validated suitability, a yield forecast or a probability of success.',
+    ),
+})
+
 FIELD_NAMES = {
     "season": ("mùa vụ", "season"),
     "scenario": ("bối cảnh khí hậu", "climate scenario"),
@@ -142,6 +197,33 @@ FIELD_NAMES = {
 }
 
 def _dynamic_message(message):
+
+    match = re.fullmatch(
+        r"Historical mean temperature: (-?\d+\.\d{2}) C; difference from P50: ([+-]\d+\.\d{2}) C\. This is not flowering-stage temperature\.", message)
+    if match:
+        return (
+            f"Nhiệt độ trung bình lịch sử: {match[1]}°C; chênh lệch với P50: {match[2]}°C. Đây không phải nhiệt độ lúc ra hoa.",
+            message)
+    match = re.fullmatch(
+        r"Historical days with Tmax above 35 C: (\d+)\. The timing and duration of heat exposure are unknown\.", message)
+    if match:
+        return (
+            f"Số ngày lịch sử có Tmax trên 35°C: {match[1]}. Chưa biết thời điểm và thời lượng phơi nhiễm nhiệt.",
+            message)
+    match = re.fullmatch(
+        r"Historical dry days below 1 mm: (\d+) of (\d+)\. This is a seasonal count, not a consecutive dry spell or a diagnosis of crop drought\.", message)
+    if match:
+        return (
+            f"Số ngày khô lịch sử có mưa dưới 1 mm: {match[1]}/{match[2]} ngày. Đây là tổng số ngày trong vụ, không phải đợt khô liên tiếp hoặc chẩn đoán hạn cho cây.",
+            message)
+    match = re.fullmatch(
+        r"Historical indicator is missing or invalid: (analog_year|avg_temp_C|hot_days_over_35C|dry_days) \((selected|baseline)\)\.", message)
+    if match:
+        fields = {"analog_year": "năm mùa vụ tham chiếu", "avg_temp_C": "nhiệt độ trung bình",
+                  "hot_days_over_35C": "số ngày nóng", "dry_days": "số ngày khô"}
+        role = "mùa được chọn" if match[2] == "selected" else "mùa điển hình"
+        return f"Chỉ báo lịch sử thiếu hoặc không hợp lệ: {fields[match[1]]} ({role}).", message
+
     # Anchored complete templates preserve the exact engine statement.
     match = re.fullmatch(
         r"Mua lich su nay co tong mua thap hon (\d+\.\d)% so voi moc dien hinh\. Day khong phai chan doan han\.",
@@ -167,7 +249,7 @@ def _dynamic_message(message):
     if match:
         field = FIELD_NAMES[match[1]]
         return f"Lựa chọn {field[0]} không hợp lệ.", f"The {field[1]} selection is invalid."
-    match = re.fullmatch(r"(drainage|irrigation|salinity|goal) khong hop le: ([^\r\n]*)", message)
+    match = re.fullmatch(r"(season|scenario|drainage|irrigation|salinity|goal) khong hop le: ([^\r\n]*)", message)
     if match:
         field = FIELD_NAMES[match[1]]
         return f"Giá trị {field[0]} không hợp lệ: {match[2]}", f"Invalid {field[1]} value: {match[2]}"
