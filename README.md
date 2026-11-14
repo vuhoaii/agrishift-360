@@ -1,75 +1,106 @@
 # 🌾 RiceShift
 
-**Từ dữ liệu không gian, đến quyết định trên ruộng.**
+**From space data to decisions in the field.**
 
-RiceShift là ứng dụng web hỗ trợ cân nhắc **tiếp tục trồng lúa** hoặc **luân canh từ lúa sang mè** cho vụ tiếp theo tại khu vực thí điểm An Giang. Ứng dụng kết hợp khí hậu lịch sử từ NASA POWER, điều kiện khu canh tác và mục tiêu người dùng để đưa ra điểm tham khảo kèm giải thích.
+**NASA Space Apps Challenge 2026 · Team Mission Impastable**
 
-Giao diện lấy cảm hứng từ một cuốn sổ tay đồng ruộng: xanh rừng, giấy kem, nét minh họa lúa và cánh đồng, nội dung bằng tiếng Việt và tiếng Anh.
+RiceShift is an experimental web application that helps users compare **continuing to grow rice** with **rotating from rice to sesame** for the next growing season in the An Giang pilot area, Vietnam. It combines NASA POWER historical climate data, reported field conditions, and user priorities to present a transparent comparison with explanations.
 
-[Hướng dẫn chạy](#chạy-trên-máy) · [Đưa code lên GitHub](docs/GIT_WORKFLOW.md) · [Deploy lên Render](docs/DEPLOY.md)
+[Try the prototype](#try-the-prototype) · [Run locally](#run-locally) · [Git workflow](docs/GIT_WORKFLOW.md) · [Deploy on Render](docs/DEPLOY.md)
 
-![Trang tổng quan RiceShift với minh họa cánh đồng và các chỉ số khí hậu mùa vụ](docs/screenshots/overview.png)
+![RiceShift overview with an illustrated rice field and seasonal climate indicators](docs/screenshots/overview.png)
 
-## Demo công khai
+## The problem
 
-**Trạng thái: chưa triển khai bản giao diện này.** Làm theo [hướng dẫn Render](docs/DEPLOY.md), sau đó thay dòng trạng thái này bằng liên kết dịch vụ thực tế do Render cấp. Kho mã GitHub và website chạy trực tuyến là hai địa chỉ riêng.
+Choosing a crop for the next season involves more than comparing rainfall totals. Farmers also need to consider drainage, access to irrigation, soil conditions, and how much they are prepared to change their current practices. Historical climate information becomes more useful when these field conditions and priorities are considered together.
 
-<!-- Sau khi deploy thành công, thay phần trạng thái trên bằng:
-**Trải nghiệm trực tiếp:** [Mở RiceShift](URL_THAT_TU_RENDER)
-Chỉ dùng URL đã mở và kiểm tra thành công.
--->
+RiceShift explores how to make that comparison understandable and explainable for an initial discussion with farmers and local agricultural advisers.
 
-## Có gì trong RiceShift?
+## The proposed solution
 
-| Màn hình | Nội dung |
+Users describe their field, select a historical climate scenario, and choose a priority. RiceShift screens two crop options, shows experimental preference scores where information is sufficient, and explains the reasons, warnings, and missing inputs behind the comparison.
+
+The prototype's contribution is the integration of seasonal NASA data with farmer-reported conditions and explicit decision criteria. Its field-notebook interface, bilingual explanations, and adjustable text size make that information easier to explore. The project has not demonstrated improved agricultural outcomes through field trials.
+
+## NASA data usage
+
+The existing climate pipeline processes NASA POWER daily rainfall and temperature data into seasonal summaries. For each supported growing season, it selects an actual historical season closest to the **P50** or **P25** percentile of seasonal rainfall:
+
+| Scenario identifier | Meaning |
 | --- | --- |
-| Tổng quan | Giới thiệu hai hướng canh tác và bối cảnh khí hậu của mùa vụ đang chọn. |
-| Khu canh tác | Nhập thoát nước, khả năng tưới, mùa vụ, kịch bản, độ mặn, pH và mục tiêu ưu tiên. |
-| Khí hậu NASA | Xem tổng mưa, nhiệt độ, ngày nóng và mùa lịch sử tham chiếu; so sánh hai kịch bản mưa. |
-| So sánh cây trồng | Điểm tham khảo, điều kiện sàng lọc, lý do, cảnh báo và báo cáo JSON. |
-| Hiểu kết quả | Giải thích dữ liệu, phương pháp, những thông tin cần xác minh và giới hạn. |
-| Phương pháp | Quy trình đánh giá, trọng số thực tế theo mục tiêu và tài liệu tham khảo. |
+| `normal` | Historical season near the P50 seasonal rainfall percentile. |
+| `low_rainfall` | Historical season near the P25 seasonal rainfall percentile. |
 
-- Chuyển **VI / EN** cho cả nội dung giao diện và các giải thích hiện có.
-- Điều chỉnh cỡ chữ **90%, 100%, 125%, 150%, 200%**; ghi nhớ lựa chọn trên trình duyệt.
-- Menu thu gọn trên máy tính, menu dạng ngăn kéo trên điện thoại; hỗ trợ bàn phím.
-- Biểu mẫu và điều hướng chính vẫn dùng được khi tắt JavaScript.
-- Dữ liệu và kết quả đi từ Flask/Decision Engine; giao diện không tự đặt điểm mẫu.
+The interface displays seasonal rainfall, mean temperature, the number of days with maximum temperature above **35°C**, and the historical reference year. It also compares rainfall across the two scenarios.
 
-## Ảnh giao diện
+The Flask application reads `RiceShift/data/processed/climate_payload_latest.json`. Observation dates and data coverage are recorded in its metadata. With the bundled data present, the web demo needs no live NASA API call, API key, or database.
 
-Các ảnh dưới đây được chụp từ website chạy cục bộ, gồm những trạng thái đầu vào cụ thể. Điểm và chỉ số có thể thay đổi theo mùa vụ, dữ liệu và lựa chọn canh tác.
+NASA POWER provides gridded historical context. These scenarios are **not weather forecasts**, measurements from an individual field, or estimates of actual irrigation requirements.
 
-| Khu canh tác | Khí hậu NASA |
+## Try the prototype
+
+**Live demo:** [Open the RiceShift web app](https://riceshift.onrender.com/)
+
+Open the Render link to explore the six views and switch between Vietnamese and English. The GitHub repository hosts the source code; the Render link opens the web application.
+
+To explore the implemented workflow:
+
+1. Open **Farm conditions** and enter drainage, irrigation access, season, scenario, soil information, and your priority.
+
+2. Review **NASA climate** for the selected historical context.
+
+3. Open **Crop comparison**, inspect the explanations and missing information, and download the JSON report.
+
+4. Use **Understand results** and **Methodology** to review how the comparison works.
+
+The GitHub repository URL is the source-code location; it is not a hosted Flask demo.
+
+## Implemented features
+
+| View | Purpose |
 | --- | --- |
-| ![Biểu mẫu điều kiện khu canh tác](docs/screenshots/farm.png) | ![Các chỉ số và biểu đồ khí hậu lịch sử](docs/screenshots/climate.png) |
+| Overview | Introduces the crop options and the selected seasonal climate context. |
+| Farm conditions | Collects drainage, irrigation, season, scenario, salinity, pH, and user priorities. |
+| NASA climate | Presents historical seasonal indicators and compares the two rainfall scenarios. |
+| Crop comparison | Shows screening outcomes, reference scores, reasons, warnings, and a JSON report. |
+| Understand results | Explains data sources, comparison logic, missing information, and limitations. |
+| Methodology | Presents the assessment process, goal-dependent weights, and references. |
 
-| So sánh cây trồng | Hiểu kết quả |
+- **VI / EN** language switching for the interface and existing result explanations.
+
+- Text sizes of **90%, 100%, 125%, 150%, and 200%**, with browser preferences retained.
+
+- A collapsible desktop sidebar, mobile navigation drawer, and keyboard support.
+
+- Core form submission and navigation that remain available without JavaScript.
+
+- Results supplied by Flask and the Decision Engine rather than fixed demonstration scores.
+
+## Screenshots
+
+These images capture the local Flask application with specific input selections. The interface shown is Vietnamese; the application also includes English. Scores and indicators can change with the selected season, dataset, and field conditions.
+
+| Farm conditions | NASA climate |
 | --- | --- |
-| ![Hai phương án Lúa sang Lúa và Lúa sang Mè](docs/screenshots/comparison.png) | ![Giải thích và các giới hạn của kết quả](docs/screenshots/insights.png) |
+| ![Field conditions form with drainage and irrigation choices](docs/screenshots/farm.png) | ![Historical seasonal climate indicators and rainfall comparison](docs/screenshots/climate.png) |
+
+| Crop comparison | Understand results |
+| --- | --- |
+| ![Comparison of rice-to-rice and rice-to-sesame crop options](docs/screenshots/comparison.png) | ![Explanations of the data, decision process, and limitations](docs/screenshots/insights.png) |
 
 <details>
-<summary>Phương pháp đánh giá và giao diện điện thoại</summary>
 
-![Quy trình và trọng số đánh giá](docs/screenshots/method.png)
+<summary>Methodology and mobile interface</summary>
 
-<img src="docs/screenshots/mobile.png" width="320" alt="Trang tổng quan RiceShift trên màn hình điện thoại">
+![Assessment workflow and goal-dependent criterion weights](docs/screenshots/method.png)
+
+<img src="docs/screenshots/mobile.png" width="320" alt="RiceShift overview on a mobile screen">
 
 </details>
 
-## Công nghệ
+## Run locally
 
-- **Flask + Jinja2** phục vụ trang và biểu mẫu.
-- **HTML, CSS, JavaScript thuần** và minh họa SVG trong thư mục static.
-- **Python Decision Engine** đánh giá và giải thích hai phương án.
-- **JSON/CSV NASA POWER** đã xử lý, lưu trong dự án.
-- **Gunicorn** phục vụ ứng dụng khi triển khai trên Linux/Render.
-
-Bản web đọc `RiceShift/data/processed/climate_payload_latest.json`. Với dữ liệu đã có trong repo, demo không cần gọi NASA API, không cần API key và không cần cơ sở dữ liệu. Ngày cập nhật và khoảng thời gian quan trắc nằm trong metadata của file JSON.
-
-## Chạy trên máy
-
-Khuyến nghị Python **3.12** và Git. Bắt đầu từ một bản clone đã có các thay đổi giao diện này.
+Use **Python 3.12** and Git. These instructions assume your checkout includes the documented Flask interface. If you are already working in the existing local project, skip the clone command and open its `RiceShift` directory.
 
 ### Windows / PowerShell
 
@@ -81,7 +112,7 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -B web.py
 ~~~
 
-Mở **http://127.0.0.1:5000/**. Dùng trực tiếp Python trong venv nên không cần thay đổi execution policy của PowerShell.
+Open [RiceShift locally](http://127.0.0.1:5000/). Calling the virtual environment's Python directly avoids changing PowerShell execution policy.
 
 ### macOS / Linux
 
@@ -93,68 +124,85 @@ python3.12 -m venv .venv
 .venv/bin/python -B web.py
 ~~~
 
-`web.py` là ứng dụng Flask được dùng cho giao diện này. `app.py` là bản Streamlit riêng; quy trình ở đây dùng Flask.
+Open [RiceShift locally](http://127.0.0.1:5000/). The `web.py` entry point serves the Flask interface. The separate `app.py` file contains a Streamlit demo; these instructions use Flask. Gunicorn is used for deployment on Linux/Render.
 
-### Kiểm tra cục bộ
+### Local checks
 
-Chạy từ thư mục `RiceShift` sau khi cài `requirements-web.txt`:
+From `RiceShift`, after installing `requirements-web.txt`:
 
 ~~~powershell
 .\.venv\Scripts\python.exe -B -m unittest test_frontend
 .\.venv\Scripts\python.exe -B test_scoring_engine.py
 ~~~
 
-Trên macOS/Linux, thay `.\.venv\Scripts\python.exe` bằng `.venv/bin/python`.
+On macOS/Linux, replace `.\.venv\Scripts\python.exe` with `.venv/bin/python`.
 
-`test_frontend.py` kiểm tra sáu màn hình ở cả hai ngôn ngữ, giữ nguyên trạng thái nhập, giải thích được dịch, lỗi biểu mẫu, dữ liệu thiếu, thay đổi khí hậu, POST và JSON. Các bài kiểm tra pipeline khí hậu dùng thêm bộ phụ thuộc trong `RiceShift/requirements.txt`.
+The existing `test_frontend.py` checks the six views in both languages, input state, translations, validation errors, unavailable scores, climate changes, POST requests, and JSON reports. Climate pipeline tests require the additional dependencies in `RiceShift/requirements.txt`. These commands are checks to run, not evidence of scientific validation.
 
-## Cấu trúc chính
+## Project structure
 
 ~~~text
 agrishift-360/
 ├── README.md
-├── .python-version             # Python 3.12 trên Render
-├── render.yaml                 # Dịch vụ Flask/Gunicorn
+├── .python-version             # Python 3.12 for Render
+├── render.yaml                 # Flask/Gunicorn deployment configuration
 ├── docs/
-│   ├── GIT_WORKFLOW.md          # Commit và push từ bản thư mục hiện tại
-│   ├── DEPLOY.md                # Cấu hình và kiểm tra Render
-│   └── screenshots/             # Ảnh thật dùng trong README
+│   ├── GIT_WORKFLOW.md          # Copy, review, commit, and push instructions
+│   ├── DEPLOY.md                # Render setup and deployment checks
+│   └── screenshots/             # Application screenshots used here
 └── RiceShift/
-    ├── web.py                   # Flask routes và dữ liệu cho template
-    ├── frontend_i18n.py         # Nội dung giao diện VI/EN
-    ├── presentation_messages.py # Dịch giải thích ở lớp hiển thị
-    ├── requirements-web.txt     # Phụ thuộc cho website
-    ├── services/                # Decision Engine và pipeline khí hậu
-    ├── data/processed/          # Payload JSON/CSV đã xử lý
-    ├── templates/               # Shell, partials và sáu màn hình Jinja
-    ├── static/                  # CSS, JS và minh họa SVG
+    ├── web.py                   # Flask routes and template context
+    ├── frontend_i18n.py         # VI/EN interface text
+    ├── presentation_messages.py # Presentation-layer message translations
+    ├── requirements-web.txt     # Web application dependencies
+    ├── services/                # Decision Engine and climate pipeline
+    ├── data/processed/          # Processed JSON/CSV payloads
+    ├── templates/               # Shared layout, partials, and six Jinja views
+    ├── static/                  # CSS, JavaScript, and SVG illustrations
     ├── test_frontend.py
     └── test_scoring_engine.py
 ~~~
 
-Tài liệu bàn giao kỹ thuật trước đây vẫn được giữ tại [.README](.README).
+The earlier technical handoff document is preserved at [.README](.README) as legacy notes in Vietnamese.
 
-## Cách hiểu kết quả
+## Scientific limitations and local validation
 
-NASA POWER cung cấp bối cảnh khí hậu lịch sử dạng lưới, không phải phép đo riêng tại từng thửa ruộng. Hai kịch bản chọn mùa lịch sử gần phân vị tổng mưa **P50** và **P25**; chúng không phải dự báo thời tiết.
+- **Historical context:** NASA POWER data is gridded and does not establish conditions at a particular field. Seasonal rainfall totals alone cannot determine irrigation availability, field flooding, or drought.
 
-Điểm **0–100** là thang ưu tiên **thử nghiệm**, không phải xác suất thành công, dự báo năng suất hoặc lợi nhuận. Phương án có thể chưa được xếp hạng khi thiếu thông tin hoặc bị loại khỏi sàng lọc khi không đáp ứng ràng buộc.
+- **Experimental scores:** The **0–100** scale expresses a provisional preference ranking. It is not validated agronomic suitability, a probability of success, or a prediction of yield or profit.
 
-Trọng số do nhóm đề xuất và thay đổi theo mục tiêu:
+- **Missing information:** Options can remain unranked when required inputs are unknown, or be excluded from screening when constraints are not met.
 
-| Mục tiêu | Nước | Đa dạng luân canh | Liên tục cách canh tác |
+- **Heuristic weights:** The team proposed the weights below; they are not scientifically calibrated coefficients.
+
+- **Pilot scope:** The prototype compares rice-to-rice and rice-to-sesame options in An Giang. The location name, seasonal calendar, soil conditions, water supply, and varieties require local confirmation.
+
+- **Field validation:** Local agricultural expertise and field validation are needed before recommendations are applied. Potential benefits such as soil improvement are not established outcomes of this prototype.
+
+| User priority | Water | Crop diversity | Continuity of current practice |
 | --- | ---: | ---: | ---: |
-| Giảm áp lực nước | 70% | 10% | 20% |
-| Đa dạng luân canh | 25% | 60% | 15% |
-| Ít thay đổi cách canh tác | 25% | 10% | 65% |
+| Reduce water pressure | 70% | 10% | 20% |
+| Diversify crop rotation | 25% | 60% | 15% |
+| Minimize changes to current practice | 25% | 10% | 65% |
 
-Địa danh, lịch mùa vụ, đất, nguồn nước và giống cần được xác minh cùng người có chuyên môn tại địa phương trước khi áp dụng ngoài đồng ruộng.
+## AI tools and asset attribution
 
-## Nguồn tham khảo
+- **OpenAI Codex** assisted with frontend implementation, interface translation, documentation, and custom SVG illustration code. **ChatGPT** was also used for planning, reviewing documentation, and exploring UI design ideas. These tools provided development assistance; crop comparisons are produced by the project's Python Decision Engine.
 
-- [NASA POWER](https://power.larc.nasa.gov/) — nguồn dữ liệu khí hậu.
-- [FAO: Rice and water](https://www.fao.org/4/S2022E/s2022e08.htm) — tham khảo về nước và canh tác lúa.
-- [NC State: Sesame Production Fact Sheet](https://content.ces.ncsu.edu/sesame-production-fact-sheet) — tham khảo canh tác mè.
-- [Agronomy, DOI 10.3390/agronomy14061185](https://doi.org/10.3390/agronomy14061185) — tài liệu về luân canh được trích trong Decision Engine.
+- The rice, sesame, landscape, notebook, and supporting illustrations in `RiceShift/static/illustrations/` were created and edited as SVG code during development. User-supplied visual references informed the interface style. These illustrations are decorative, not NASA imagery or scientific evidence.
 
-**Nhóm phát triển: Mission Impastable · RiceShift · 2026.**
+- The images in `docs/screenshots/` are captures of the local RiceShift application. They are not generated mockups.
+
+Mission Impastable remains responsible for the submission and for reviewing the code, scientific assumptions, and asset attribution.
+
+## Data and scientific references
+
+- [NASA POWER](https://power.larc.nasa.gov/) — climate data source.
+
+- [FAO: Rice and water](https://www.fao.org/4/S2022E/s2022e08.htm) — reference on water and rice cultivation.
+
+- [NC State: Sesame Production Fact Sheet](https://content.ces.ncsu.edu/sesame-production-fact-sheet) — sesame cultivation reference.
+
+- [Agronomy, DOI 10.3390/agronomy14061185](https://doi.org/10.3390/agronomy14061185) — crop rotation reference cited by the Decision Engine.
+
+**Mission Impastable · RiceShift · 2026**
