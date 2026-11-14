@@ -6,7 +6,7 @@
 
 - Module: `services/climate_pipeline.py`.
 - Hàm dùng chung: `get_climate_payload_for_ui()`.
-- Dữ liệu NASA POWER hằng ngày, giai đoạn **2014–2025**, tọa độ thử nghiệm **(10.35, 105.28)**.
+- Dữ liệu NASA POWER hằng ngày, giai đoạn **2006–2025**, tọa độ thử nghiệm **(10.35, 105.28)**.
 - Hai kịch bản: `normal` (chọn mùa lịch sử gần P50 lượng mưa) và `low_rainfall` (chọn mùa lịch sử gần P25).
 - Mùa vụ: `Dong_Xuan` (tháng 11–3), `He_Thu` (4–7), `Thu_Dong` (8–10). Đây là **lịch thí điểm**, cần xác nhận với nhóm/địa phương.
 - Các file kết quả nằm trong `data/processed/`: `daily_clean_*.csv`, `seasonal_stats_*.csv`, `climate_payload_*.json`.
