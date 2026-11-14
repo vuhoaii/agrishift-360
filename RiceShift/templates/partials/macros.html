@@ -1,0 +1,68 @@
+{% macro icon(name) -%}
+<svg class="icon" aria-hidden="true"><use href="#i-{{ name }}"></use></svg>
+{%- endmacro %}
+
+{% macro illustration(name, css='', lazy=true) -%}
+<img class="{{ css }}" src="{{ url_for('static', filename='illustrations/' ~ name ~ '.svg') }}" alt="" aria-hidden="true" {% if lazy %}loading="lazy"{% endif %} decoding="async">
+{%- endmacro %}
+
+{% macro metrics(c) -%}
+<div class="metric-grid">
+  <div class="metric">
+    <div class="metric-label">{{ icon('rain') }}<span>{{ t('rainfall') }}</span></div>
+    <strong class="metric-value">{{ '%.2f'|format(c.rain_mm) }} <small>mm</small></strong>
+    <p class="metric-note">{{ t('rain_change', value='%+.1f'|format(c.rain_change_pct)) }}</p>
+  </div>
+  <div class="metric">
+    <div class="metric-label">{{ icon('temp') }}<span>{{ t('temperature') }}</span></div>
+    <strong class="metric-value">{{ c.avg_temp_c if c.avg_temp_c is not none else '—' }}{% if c.avg_temp_c is not none %}<small>°C</small>{% endif %}</strong>
+    {% if c.avg_temp_c is none %}<p class="metric-note">{{ t('no_value') }}</p>{% endif %}
+  </div>
+  <div class="metric">
+    <div class="metric-label">{{ icon('sun') }}<span>{{ t('hot_days') }}</span></div>
+    <strong class="metric-value">{{ c.hot_days if c.hot_days is not none else '—' }}</strong>
+    {% if c.hot_days is none %}<p class="metric-note">{{ t('no_value') }}</p>{% endif %}
+  </div>
+  <div class="metric">
+    <div class="metric-label">{{ icon('calendar') }}<span>{{ t('analog_year') }}</span></div>
+    <strong class="metric-value">{{ c.analog_year if c.analog_year is not none else '—' }}</strong>
+    {% if c.analog_year is none %}<p class="metric-note">{{ t('no_value') }}</p>{% endif %}
+  </div>
+</div>
+{%- endmacro %}
+
+{% macro summary(result, defaults=false) -%}
+<aside class="summary-note">
+  <span class="note-mark">{{ icon('sprout') }}</span>
+  <div><h2>{{ t('summary_title') }}</h2><p>{{ msg(result.summary) }}</p><p class="caption">{{ t('default_note') if defaults else t('local_check') }}</p></div>
+</aside>
+{%- endmacro %}
+
+{% macro missing(items) -%}
+<details class="missing-details">
+  <summary>{{ icon('method') }}{{ t('missing_count', count=items|length) if items else t('missing_title') }}</summary>
+  {% if items %}<ul>{% for item in items %}<li>{{ msg(item) }}</li>{% endfor %}</ul>
+  {% else %}<p class="help">{{ t('missing_none') }}</p>{% endif %}
+</details>
+{%- endmacro %}
+
+{% macro sources(urls) -%}
+<div class="source-links">
+  {% for url in urls|unique %}
+  {% if url.startswith('https://') %}
+  <a href="{{ url }}" target="_blank" rel="noopener noreferrer">{{ source_label(url) }}<span class="sr-only"> · {{ t('new_tab') }}</span>{{ icon('arrow') }}</a>
+  {% endif %}
+  {% endfor %}
+</div>
+{%- endmacro %}
+
+{% macro select_field(name, label, choices, current, glyph='', help='') -%}
+<div class="field">
+  <label for="{{ name }}">{% if glyph %}{{ icon(glyph) }}{% endif %}{{ label }}</label>
+  <select id="{{ name }}" name="{{ name }}" {% if help %}aria-describedby="{{ name }}-help"{% endif %}>
+    {% if current not in choices %}<option value="{{ current }}" selected>{{ t('invalid_choice') }}</option>{% endif %}
+    {% for value in choices %}<option value="{{ value }}" {% if current == value %}selected{% endif %}>{{ t(name ~ '_' ~ value) }}</option>{% endfor %}
+  </select>
+  {% if help %}<p class="help" id="{{ name }}-help">{{ help }}</p>{% endif %}
+</div>
+{%- endmacro %}

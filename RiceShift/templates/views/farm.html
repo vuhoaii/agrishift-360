@@ -1,0 +1,65 @@
+<header class="page-head">
+  {{ illustration('rice-stalk','head-art rice',false) }}
+  <div class="page-head-copy"><h1>{{ t('farm_title') }}</h1><div class="title-accent" aria-hidden="true"></div><p>{{ t('farm_intro') }}</p></div>
+</header>
+<form id="farm-form" method="get" action="{{ url_for('home') }}">
+  <input type="hidden" name="view" value="comparison">
+  <input type="hidden" name="lang" value="{{ lang }}">
+  <div class="farm-grid">
+    <div class="farm-questions">
+      {% for name, choices in [
+        ('drainage', [('good','soil-drainage'),('poor','soil-waterlogged'),('unknown','soil-unknown')]),
+        ('irrigation', [('available','irrigation'),('limited','watering-can'),('unknown','weather')])
+      ] %}
+      <fieldset class="question" aria-describedby="{{ name }}-help">
+        <legend>{{ t(name ~ '_question') }}</legend>
+        <div class="choice-grid">
+          {% for value, drawing in choices %}
+          <label class="choice">
+            <input type="radio" name="{{ name }}" value="{{ value }}" {% if selected[name] == value %}checked{% endif %} required>
+            <span class="choice-body">{{ illustration(drawing) }}<strong>{{ t(name ~ '_' ~ value) }}</strong></span>
+          </label>
+          {% endfor %}
+        </div>
+        <p class="help" id="{{ name }}-help">{{ t(name ~ '_help') }}</p>
+      </fieldset>
+      {% endfor %}
+    </div>
+    <div class="farm-side">
+      <section class="panel" aria-label="{{ t('nav_farm') }}">
+        <div class="field-grid">
+          {{ select_field('season', t('season'), seasons, selected.season, 'calendar') }}
+          {{ select_field('scenario', t('scenario'), scenarios, selected.scenario, 'cloud') }}
+          <div class="field full">
+            <label for="goal">{{ icon('sprout') }}{{ t('goal_question') }}</label>
+            <select id="goal" name="goal">
+              {% if selected.goal not in goals %}<option value="{{ selected.goal }}" selected>{{ t('invalid_choice') }}</option>{% endif %}
+              {% for value in goals %}<option value="{{ value }}" {% if selected.goal == value %}selected{% endif %}>{{ t('goal_' ~ value) }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+        <p class="help">{{ t('scenario_help') }}</p>
+        <details class="optional-details" {% if selected.soil_ph or selected.salinity != 'unknown' or selected.calendar %}open{% endif %}>
+          <summary>{{ icon('land') }}{{ t('optional_details') }}</summary>
+          <p class="help">{{ t('optional_hint') }}</p>
+          <div class="field-grid">
+            {{ select_field('salinity', t('salinity'), ['unknown','no','yes'], selected.salinity) }}
+            <div class="field">
+              <label for="soil-ph">{{ t('soil_ph') }}</label>
+              <input id="soil-ph" name="soil_ph" type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" value="{{ selected.soil_ph }}" placeholder="{{ t('ph_placeholder') }}" aria-describedby="ph-help">
+            </div>
+          </div>
+          <p class="help" id="ph-help">{{ t('ph_help') }}</p>
+          <label class="check"><input type="checkbox" name="calendar" value="yes" {% if selected.calendar == 'yes' %}checked{% endif %}><span>{{ t('calendar') }}</span></label>
+          <p class="help">{{ t('calendar_help') }}</p>
+        </details>
+        <aside class="pilot-note">{{ icon('info') }}<span>{{ t('pilot_note') }}</span></aside>
+      </section>
+      <div class="actions farm-submit">
+        <a class="btn btn-outline" href="{{ url_for('home', view='dashboard', **qs) }}">{{ icon('back') }}{{ t('back') }}</a>
+        <button class="btn btn-primary" type="submit">{{ icon('sprout') }}{{ t('analyse') }}{{ icon('arrow') }}</button>
+      </div>
+    </div>
+  </div>
+</form>
+{{ illustration('field-landscape','page-landscape') }}

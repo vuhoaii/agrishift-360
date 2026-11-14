@@ -1,0 +1,45 @@
+<header class="page-head">
+  <div class="page-head-copy"><h1>{{ t('comparison_title') }}</h1><div class="title-accent" aria-hidden="true"></div><p>{{ t('comparison_intro') }}</p></div>
+</header>
+{% if result %}
+<div class="context-strip"><span>{{ icon('calendar') }}{{ t('season_' ~ selected.season) }}</span><span>{{ icon('cloud') }}{{ t('scenario_' ~ selected.scenario) }}</span></div>
+<section class="comparison-grid" aria-label="{{ t('nav_comparison') }}">
+  {% for option in result.options %}
+  <article class="option {{ 'rice' if option.id == 'rice_rice' else 'sesame' }} {{ 'leading' if option.id == result.leading_option_id else '' }}" aria-labelledby="option-{{ option.id }}">
+    <div class="option-heading">
+      <div><h2 id="option-{{ option.id }}">{{ msg(option.name) }}</h2><span class="state {{ option.status }}">{{ icon('warning' if option.status == 'blocked' else 'info' if option.status == 'needs_info' else 'sprout') }}{{ t('status_' ~ option.status) }}</span></div>
+      {{ illustration('rice-stalk' if option.id == 'rice_rice' else 'sesame-plant','crop-art',false) }}
+    </div>
+    {% if option.score is not none %}
+    <p class="score-label">{{ t('score_label') }}</p><p class="score-value">{{ '%.1f'|format(option.score) }} <small>/ 100</small></p>
+    <div class="meter" aria-hidden="true"><svg viewBox="0 0 100 9" preserveAspectRatio="none"><rect width="{{ option.score }}" height="9" rx=".5"></rect></svg></div>
+    {% else %}
+    <p class="score-empty">{{ t('status_blocked') if option.status == 'blocked' else t('score_unavailable') }}</p>
+    {% endif %}
+    <p class="score-note">{{ t('score_disclaimer') }}</p>
+    <div class="option-factors">
+      {% if option.reasons %}
+      <section><h3 class="factor-heading">{{ icon('check') }}{{ t('advantages') }}</h3><ul class="reason-list">{% for reason in option.reasons %}<li>{{ msg(reason) }}</li>{% endfor %}</ul></section>
+      {% endif %}
+      {% if option.warnings %}
+      <section><h3 class="factor-heading warning">{{ icon('warning') }}{{ t('warnings') }}</h3><ul class="reason-list">{% for warning in option.warnings %}<li>{{ msg(warning) }}</li>{% endfor %}</ul></section>
+      {% endif %}
+    </div>
+    <details>
+      <summary>{{ icon('scale') }}{{ t('score_details') }}</summary>
+      <div class="details-content">
+        {% for key in ['water','diversity','continuity'] %}<div class="breakdown"><span>{{ t(key) }}</span><strong>{{ (option.components[key]|string ~ ' / 2') if option.components[key] is not none else t('unknown') }}</strong></div>{% endfor %}
+        <p class="help">{{ t('component_note') }}</p>
+      </div>
+    </details>
+    <details><summary>{{ icon('method') }}{{ t('sources') }}</summary><div class="details-content">{{ sources(option.sources) }}</div></details>
+  </article>
+  {% endfor %}
+</section>
+<section class="section" aria-label="{{ t('summary_title') }}">{{ summary(result) }}{{ missing(result.missing_info) }}</section>
+<div class="comparison-footer">
+  <a class="btn btn-outline" href="{{ url_for('home', view='farm', **qs) }}">{{ icon('land') }}{{ t('edit_conditions') }}</a>
+  <a class="text-link" href="{{ url_for('home', view='insights', **qs) }}">{{ t('understand') }}{{ icon('arrow') }}</a>
+  <a class="btn btn-primary" href="{{ url_for('report', **qs) }}">{{ icon('download') }}{{ t('export') }}</a>
+</div>
+{% endif %}

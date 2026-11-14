@@ -1,0 +1,21 @@
+<section class="hero" aria-labelledby="hero-title">
+  <div class="hero-copy">
+    <h1 id="hero-title">{{ t('hero_title') }}</h1>
+    <div class="title-accent" aria-hidden="true"></div>
+    <p>{{ t('hero_intro') }}</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="{{ url_for('home', view='farm', **qs) }}">{{ t('start') }}{{ icon('arrow') }}</a>
+      <a class="btn btn-outline" href="{{ url_for('home', view='comparison', **qs) }}">{{ t('view_comparison') }}</a>
+    </div>
+  </div>
+  {{ illustration('field-landscape','hero-landscape',false) }}
+  {{ illustration('rice-stalk','hero-stalk',false) }}
+</section>
+{% if result %}
+<section class="section" aria-labelledby="season-heading">
+  <div class="heading-row"><h2 id="season-heading">{{ t('climate_context') }}</h2><span class="caption">{{ t('season_' ~ selected.season) }} · {{ t('scenario_' ~ selected.scenario) }}</span></div>
+  {{ metrics(c) }}
+  <p class="help">{{ t('historical_short') }}</p>
+</section>
+<section class="section" aria-label="{{ t('summary_title') }}">{{ summary(result, true) }}</section>
+{% endif %}
